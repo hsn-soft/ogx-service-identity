@@ -1,6 +1,6 @@
-﻿#nullable disable
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-using Microsoft.EntityFrameworkCore.Migrations;
+#nullable disable
 
 namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.Service
 {
