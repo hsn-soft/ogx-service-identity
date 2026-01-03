@@ -1,12 +1,12 @@
+using HsnSoft.Base.Application.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Filters;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Submits;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Services;
 using Ogx.IdentityService.Controllers.Base;
 using Ogx.Shared.Contracts.Cache.ServicePermissions;
-using HsnSoft.Base.Application.Dtos;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ogx.IdentityService.Controllers;
 
@@ -27,7 +27,7 @@ public sealed class AppUsersController : BaseServiceController
     [Authorize(IdentityServicePermissions.AppUsers.PageView)]
     [HttpPost("paged-list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<PagedResultDto<AppUserDto>> GetPagedListAsync([FromBody] GetAppUsersPaged pagedInput) => await _appUserAppService.GetPagedListAsync(pagedInput);
+    public async Task<PagedDataResultDto<AppUserDto>> GetPagedListAsync([FromBody] GetAppUsersPaged pagedInput) => await _appUserAppService.GetPagedListAsync(pagedInput);
 
     [HttpPost("filter-list")]
     [ProducesResponseType(StatusCodes.Status200OK)]

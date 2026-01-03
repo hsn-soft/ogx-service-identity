@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 # Metadata labels
 LABEL org.opencontainers.image.title="HsnSoft Ogx Identity Service" \
       org.opencontainers.image.description="HsnSoft Ogx Identity Service" \
@@ -22,7 +22,7 @@ RUN apt-get update && \
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl --fail http://localhost:8080/LivenessCheck || exit 1
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-stage
 WORKDIR /build-source
 
 # Non-root user setup
@@ -33,6 +33,7 @@ RUN groupadd -r -g 1001 servicegroup && \
 COPY ["./nuget.config", "./"]
 COPY ["./common.props", "./"]
 COPY ["./common.version.props", "./"]
+COPY ["./common.test.props", "./"]
 COPY ["./public_key.xml", "./"]
 
 COPY ["./src/Ogx.IdentityService.Application/Ogx.IdentityService.Application.csproj", "./src/Ogx.IdentityService.Application/"]
@@ -42,15 +43,14 @@ COPY ["./src/Ogx.IdentityService.Http.Host/Ogx.IdentityService.Http.Host.csproj"
 
 ENV NUGET_CERT_REVOCATION_MODE=offline
 
-# NuGet restore with secrets
-RUN --mount=type=secret,id=NUGET_USER \
-    --mount=type=secret,id=NUGET_TOKEN \
-    export NUGET_USER=$(cat /run/secrets/NUGET_USER) && \
-    export NUGET_TOKEN=$(cat /run/secrets/NUGET_TOKEN) && \
-    dotnet nuget update source github \
+# --- 🔑 BUILD ARG Credentials ---
+ARG NUGET_USER
+ARG NUGET_TOKEN
+
+RUN dotnet nuget update source github \
         --username $NUGET_USER \
         --password $NUGET_TOKEN \
-        --store-password-in-clear-text
+        --store-password-in-clear-text || true
 
 RUN dotnet restore "./src/Ogx.IdentityService.Http.Host/Ogx.IdentityService.Http.Host.csproj" --force --verbosity minimal
 

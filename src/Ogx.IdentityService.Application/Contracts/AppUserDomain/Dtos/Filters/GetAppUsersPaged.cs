@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Filters;
 
-public sealed class GetAppUsersPaged : PagedAndSortedResultRequestDto
+public sealed class GetAppUsersPaged : PagedDataRequestDto
 {
     public Guid? TenantId { get; set; } = null;
 

@@ -1,12 +1,12 @@
+using HsnSoft.Base.Application.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Filters;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Submits;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Services;
 using Ogx.IdentityService.Controllers.Base;
 using Ogx.Shared.Contracts.Cache.ServicePermissions;
-using HsnSoft.Base.Application.Dtos;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ogx.IdentityService.Controllers;
 
@@ -27,7 +27,7 @@ public sealed class AppRoleController : BaseServiceController
     [Authorize(IdentityServicePermissions.AppRoles.PageView)]
     [HttpPost("paged-list")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<PagedResultDto<AppRoleDto>> GetPagedListAsync([FromBody] GetAppRolesPaged pagedInput) => await _appRoleAppService.GetPagedListAsync(pagedInput);
+    public async Task<PagedDataResultDto<AppRoleDto>> GetPagedListAsync([FromBody] GetAppRolesPaged pagedInput) => await _appRoleAppService.GetPagedListAsync(pagedInput);
 
     [HttpPost("filter-list")]
     [ProducesResponseType(StatusCodes.Status200OK)]

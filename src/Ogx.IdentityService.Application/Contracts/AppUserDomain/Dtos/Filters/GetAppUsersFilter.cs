@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Filters;
 
-public sealed class GetAppUsersFilter : SortedResultRequestDto
+public sealed class GetAppUsersFilter : SortedAndLimitedDataRequestDto
 {
     public Guid? TenantId { get; set; } = null;
 

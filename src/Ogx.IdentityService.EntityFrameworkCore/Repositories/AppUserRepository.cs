@@ -1,6 +1,15 @@
 using System.Globalization;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using HsnSoft.Base;
+using HsnSoft.Base.Data;
+using HsnSoft.Base.Domain.Models;
+using HsnSoft.Base.MultiTenancy;
+using HsnSoft.Base.Validation.Localization;
+using JetBrains.Annotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Ogx.IdentityService.Domain.AppRoleDomain.Exceptions;
 using Ogx.IdentityService.Domain.AppUserDomain.Consts;
 using Ogx.IdentityService.Domain.AppUserDomain.Entities;
@@ -10,30 +19,24 @@ using Ogx.IdentityService.Domain.Localization;
 using Ogx.IdentityService.EntityFrameworkCore.Context;
 using Ogx.Shared.Helper.Utils;
 using Ogx.Shared.Localization;
-using HsnSoft.Base;
-using HsnSoft.Base.Data;
-using HsnSoft.Base.MultiTenancy;
-using HsnSoft.Base.Validation.Localization;
-using JetBrains.Annotations;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
 
 namespace Ogx.IdentityService.EntityFrameworkCore.Repositories;
 
-public class AppUserRepository : IAppUserRepository
+public class AppUserRepository(
+    IdentityAppDbContext context,
+    IStringLocalizerFactory stringLocalizerFactory,
+    IDataFilter dataFilter,
+    ICurrentTenant currentTenant,
+    UserManager<AppUser> userManager)
+    : IAppUserRepository
 {
-    private readonly IdentityAppDbContext _context;
-    private readonly UserManager<AppUser> _userManager;
+    private DbSet<AppUser> GetDbSet() => context?.Set<AppUser>();
 
-    [NotNull]
-    protected IStringLocalizer L { get; }
+    [NotNull] protected IStringLocalizer L { get; } = stringLocalizerFactory.CreateMultiple([typeof(IdentityServiceResource), typeof(ValidationResource), typeof(SharedResource)]);
 
-    [CanBeNull]
-    private IDataFilter DataFilter { get; }
+    [CanBeNull] private IDataFilter DataFilter { get; } = dataFilter;
 
-    [CanBeNull]
-    private ICurrentTenant CurrentTenant { get; }
+    [CanBeNull] private ICurrentTenant CurrentTenant { get; } = currentTenant;
 
     private Guid? CurrentTenantId => CurrentTenant?.Id;
 
@@ -41,114 +44,96 @@ public class AppUserRepository : IAppUserRepository
 
     private bool IsSoftDeleteFilterEnabled => DataFilter?.IsEnabled<ISoftDelete>() ?? false;
 
-    public AppUserRepository(IdentityAppDbContext context,
-        IStringLocalizerFactory stringLocalizerFactory,
-        IDataFilter dataFilter,
-        ICurrentTenant currentTenant,
-        UserManager<AppUser> userManager)
+    private IQueryable<AppUser> GetQueryableUser(List<Guid> roleIds = null)
     {
-        _context = context;
-        DataFilter = dataFilter;
-        CurrentTenant = currentTenant;
-        _userManager = userManager;
-
-        L = stringLocalizerFactory.CreateMultiple(new List<Type>
-        {
-            typeof(IdentityServiceResource),
-            typeof(ValidationResource),
-            typeof(SharedResource)
-        });
-    }
-
-    public async Task<List<AppUser>> GetPagedListWithFiltersAsync(Guid? tenantId,
-        string username = null,
-        string email = null,
-        bool? emailConfirmed = null,
-        string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        string name = null,
-        string surname = null,
-        List<Guid> roleIds = null,
-        string sorting = null,
-        int maxResultCount = int.MaxValue,
-        int skipCount = 0,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var queryUser = _context.Users.AsQueryable();
+        IQueryable<AppUser> query = GetDbSet();
         if (roleIds is { Count: > 0 })
         {
-            queryUser = from usr in _context.Users
-                join ur in _context.UserRoles on usr.Id equals ur.UserId
+            query = from usr in context.Users
+                join ur in context.UserRoles on usr.Id equals ur.UserId
                 where roleIds.Contains(ur.RoleId)
                 select usr;
         }
 
-        var query = ApplyFilter(queryUser, tenantId, null,
-            username, email, emailConfirmed, phoneNumber, phoneConfirmed, name, surname);
-
-        // TODO: Convert new paging list
-        return await query
-            .OrderBy(string.IsNullOrWhiteSpace(sorting) ? AppUserConsts.GetDefaultSorting(false) : sorting)
-            .PageBy(0, maxResultCount)
-            .ToListAsync(cancellationToken: cancellationToken);
+        return query.AsNoTracking();
     }
 
-    public async Task<long> GetCountWithFiltersAsync(Guid? tenantId,
-        string username = null,
-        string email = null,
-        bool? emailConfirmed = null,
-        string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        string name = null,
-        string surname = null,
+    public async Task<PagedQueryResult<AppUser>> GetPageListAsync(
+        PagedQueryOptions<AppUser> options,
+        Guid? tenantId = null,
         List<Guid> roleIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = GetQueryableUser(roleIds);
+        if (IsMultiTenantFilterEnabled)
+        {
+            query = query.Where(e => e.TenantId == CurrentTenantId);
+        }
+        else if (tenantId.HasValue)
+        {
+            query = query.Where(e => e.TenantId == tenantId.Value);
+        }
+
+        if (IsSoftDeleteFilterEnabled)
+        {
+            query = query.Where(e => e.IsDeleted == false);
+        }
+
+        if (options.Filter != null) query = query.Where(options.Filter);
+
+        long totalCount = await query.LongCountAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(options.OrderByDynamic))
+            query = query.OrderBy(options.OrderByDynamic);
+        else if (options.OrderByEntity != null)
+            query = options.OrderByEntity(query);
+
+        if (options.PageNumber > 1)
+        {
+            query = query.Skip((options.PageNumber - 1) * options.MaxResultCount)
+                .Take(options.MaxResultCount);
+        }
+        else
+        {
+            query = query.Take(options.MaxResultCount);
+        }
+
+        var items = await query.ToListAsync(cancellationToken);
+
+        return new PagedQueryResult<AppUser> { Items = items, TotalCount = totalCount };
+    }
+
+    public async Task<List<AppUser>> GetListAsync(
+        ListQueryOptions<AppUser> options,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default
     )
     {
-        var queryUser = _context.Users.AsQueryable();
-        if (roleIds is { Count: > 0 })
+        var query = GetQueryableUser();
+        if (IsMultiTenantFilterEnabled)
         {
-            queryUser = from usr in _context.Users
-                join ur in _context.UserRoles on usr.Id equals ur.UserId
-                where roleIds.Contains(ur.RoleId)
-                select usr;
+            query = query.Where(e => e.TenantId == CurrentTenantId);
+        }
+        else if (tenantId.HasValue)
+        {
+            query = query.Where(e => e.TenantId == tenantId.Value);
         }
 
-        var query = ApplyFilter(queryUser, tenantId, null,
-            username, email, emailConfirmed, phoneNumber, phoneConfirmed, name, surname);
-
-        return await query.LongCountAsync(cancellationToken: cancellationToken);
-    }
-
-    public async Task<List<AppUser>> GetFilterListAsync(Guid? tenantId,
-        string username = null,
-        string email = null,
-        bool? emailConfirmed = null,
-        string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        string name = null,
-        string surname = null,
-        List<Guid> roleIds = null,
-        string sorting = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var queryUser = _context.Users.AsQueryable();
-        if (roleIds is { Count: > 0 })
+        if (IsSoftDeleteFilterEnabled)
         {
-            queryUser = from usr in _context.Users
-                join ur in _context.UserRoles on usr.Id equals ur.UserId
-                where roleIds.Contains(ur.RoleId)
-                select usr;
+            query = query.Where(e => e.IsDeleted == false);
         }
 
-        var query = ApplyFilter(queryUser, tenantId, null,
-            username, email, emailConfirmed, phoneNumber, phoneConfirmed, name, surname);
+        if (options.Filter != null) query = query.Where(options.Filter);
 
-        return await query
-            .OrderBy(string.IsNullOrWhiteSpace(sorting) ? AppUserConsts.GetDefaultSorting(false) : sorting)
-            .ToListAsync(cancellationToken: cancellationToken);
+        if (!string.IsNullOrWhiteSpace(options.OrderByDynamic))
+            query = query.OrderBy(options.OrderByDynamic);
+        else if (options.OrderByEntity != null)
+            query = options.OrderByEntity(query);
+
+        if (options.MaxResultCount.HasValue) query = query.Take(options.MaxResultCount.Value);
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<List<AppUser>> GetSearchListAsync(Guid? tenantId,
@@ -158,7 +143,7 @@ public class AppUserRepository : IAppUserRepository
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(_context.Users.AsQueryable(), tenantId, searchText);
+        var query = ApplyFilter(context.Users.AsQueryable(), tenantId, searchText);
 
         return await query
             .OrderBy(string.IsNullOrWhiteSpace(sorting) ? AppUserConsts.GetDefaultSorting(false) : sorting)
@@ -168,7 +153,7 @@ public class AppUserRepository : IAppUserRepository
 
     public async Task<List<string>> GetUserRolesAsync(AppUser currentUser)
     {
-        var roleList = (await _userManager.GetRolesAsync(currentUser)).ToList();
+        var roleList = (await userManager.GetRolesAsync(currentUser)).ToList();
         if (roleList is not { Count: > 0 }) return roleList;
 
         for (int i = 0; i < roleList.Count; i++)
@@ -183,7 +168,7 @@ public class AppUserRepository : IAppUserRepository
         => await FindAsync(x => x.Id == id);
 
     public async Task<AppUser> FindAsync(Expression<Func<AppUser, bool>> predicate)
-        => await _context.Users
+        => await context.Users
             .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
             .WhereIf(IsMultiTenantFilterEnabled, e => e.TenantId == CurrentTenantId)
             .FirstOrDefaultAsync(predicate);
@@ -269,8 +254,8 @@ public class AppUserRepository : IAppUserRepository
         }
 
         var result = string.IsNullOrWhiteSpace(plainPassword)
-            ? await _userManager.CreateAsync(draftAppUser)
-            : await _userManager.CreateAsync(draftAppUser, plainPassword);
+            ? await userManager.CreateAsync(draftAppUser)
+            : await userManager.CreateAsync(draftAppUser, plainPassword);
 
         if (!result.Succeeded) throw new AppUserIdentityException(L, result.Errors);
 
@@ -334,11 +319,11 @@ public class AppUserRepository : IAppUserRepository
             await UserRolesControlAsync(roles);
         }
 
-        var result = await _userManager.UpdateAsync(oldAppUser);
+        var result = await userManager.UpdateAsync(oldAppUser);
         if (!result.Succeeded) throw new AppUserIdentityException(L, result.Errors);
 
         // remove user roles
-        var existRoles = (await _userManager.GetRolesAsync(oldAppUser)).ToList();
+        var existRoles = (await userManager.GetRolesAsync(oldAppUser)).ToList();
         if (existRoles is { Count: > 0 })
         {
             await RemoveFromRolesAsync(oldAppUser, existRoles);
@@ -377,7 +362,7 @@ public class AppUserRepository : IAppUserRepository
         appUser.SetUserName(uniqueUserName);
         appUser.SetEmail(uniqueEmail);
         appUser.IsDeleted = true;
-        var result = await _userManager.UpdateAsync(appUser);
+        var result = await userManager.UpdateAsync(appUser);
         if (!result.Succeeded) throw new AppUserIdentityException(L, result.Errors);
     }
 
@@ -426,13 +411,13 @@ public class AppUserRepository : IAppUserRepository
 
     private async Task AddToRolesAsync(AppUser appUser, IEnumerable<string> appRoles)
     {
-        var result = await _userManager.AddToRolesAsync(appUser, appRoles);
+        var result = await userManager.AddToRolesAsync(appUser, appRoles);
         if (!result.Succeeded) throw new AppUserIdentityException(L, result.Errors);
     }
 
     private async Task RemoveFromRolesAsync(AppUser appUser, IEnumerable<string> appRoles)
     {
-        var result = await _userManager.RemoveFromRolesAsync(appUser, appRoles);
+        var result = await userManager.RemoveFromRolesAsync(appUser, appRoles);
         if (!result.Succeeded) throw new AppUserIdentityException(L, result.Errors);
     }
 
@@ -440,7 +425,7 @@ public class AppUserRepository : IAppUserRepository
     {
         foreach (string roleName in roles)
         {
-            var result = await _context.Roles
+            var result = await context.Roles
                 .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
                 .WhereIf(IsMultiTenantFilterEnabled, e => e.TenantId == CurrentTenantId)
                 .FirstOrDefaultAsync(x => x.Name == roleName);

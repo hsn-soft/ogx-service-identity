@@ -1,11 +1,11 @@
-using Ogx.Shared.Contracts;
-using Ogx.Shared.Contracts.Events;
 using HsnSoft.Base.Domain.Entities.Events;
 using HsnSoft.Base.EventBus;
 using HsnSoft.Base.EventBus.Logging;
 using HsnSoft.Base.Logging;
+using Ogx.Shared.Contracts;
+using Ogx.Shared.Contracts.Events;
 
-namespace Ogx.IdentityService.Application.EventHandlers;
+namespace Ogx.IdentityService.EventHandlers;
 
 public sealed class CachePermissionGrantsChangedEtoHandler(IEventBusLogger logger) : IIntegrationEventHandler<CachePermissionGrantsChangedEto>
 {

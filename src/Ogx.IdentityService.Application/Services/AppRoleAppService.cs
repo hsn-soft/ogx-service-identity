@@ -1,14 +1,14 @@
 using System.Net;
+using HsnSoft.Base;
+using HsnSoft.Base.Application.Dtos;
+using HsnSoft.Base.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Filters;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Submits;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Services;
 using Ogx.IdentityService.Domain.AppRoleDomain.Entities;
 using Ogx.IdentityService.Domain.AppRoleDomain.Repositories;
-using HsnSoft.Base;
-using HsnSoft.Base.Application.Dtos;
-using HsnSoft.Base.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Ogx.IdentityService.Application.Services;
 
@@ -42,7 +42,7 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
         return Mapper.Map<AppRole, AppRoleDto>(item);
     }
 
-    public async Task<PagedResultDto<AppRoleDto>> GetPagedListAsync(GetAppRolesPaged pagedInput)
+    public async Task<PagedDataResultDto<AppRoleDto>> GetPagedListAsync(GetAppRolesPaged pagedInput)
     {
         if (pagedInput == null)
         {
@@ -54,14 +54,14 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
 
         var items = await _appRoleRepository.GetPagedListWithFiltersAsync(pagedInput.TenantId,
             pagedInput.Name, pagedInput.IsDefault, pagedInput.IsStatic, pagedInput.IsPublic,
-            pagedInput.SortingText, pagedInput.MaxResultCount, pagedInput.ResultPageNumber);
+            pagedInput.SortingText, pagedInput.MaxResultCount, pagedInput.PageNumber);
 
         if (items == null)
         {
             throw new BaseHttpException((int)HttpStatusCode.RequestTimeout);
         }
 
-        return new PagedResultDto<AppRoleDto> { TotalCount = totalCount, Items = Mapper.Map<List<AppRole>, List<AppRoleDto>>(items) };
+        return new PagedDataResultDto<AppRoleDto>(totalCount, pagedInput.PageNumber, pagedInput.MaxResultCount, Mapper.Map<List<AppRole>, List<AppRoleDto>>(items));
     }
 
     public async Task<List<AppRoleDto>> GetFilterListAsync(GetAppRolesFilter filterInput)

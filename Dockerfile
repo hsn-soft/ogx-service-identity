@@ -1,13 +1,14 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /packages
 USER root
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-stage
 WORKDIR /build-source
 
 COPY ["./nuget.config", "./"]
 COPY ["./common.props", "./"]
 COPY ["./common.version.props", "./"]
+COPY ["./common.test.props", "./"]
 
 COPY ["./src/Ogx.IdentityService.Domain/Ogx.IdentityService.Domain.csproj", "./src/Ogx.IdentityService.Domain/"]
 COPY ["./src/Ogx.IdentityService.EntityFrameworkCore/Ogx.IdentityService.EntityFrameworkCore.csproj", "./src/Ogx.IdentityService.EntityFrameworkCore/"]

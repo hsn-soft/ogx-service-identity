@@ -1,7 +1,7 @@
+using HsnSoft.Base.Application.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Filters;
 using Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Submits;
-using HsnSoft.Base.Application.Dtos;
 
 namespace Ogx.IdentityService.Application.Contracts.AppRoleDomain.Services;
 
@@ -9,7 +9,7 @@ public interface IAppRoleAppService
 {
     Task<AppRoleDto> GetAsync(Guid id);
 
-    Task<PagedResultDto<AppRoleDto>> GetPagedListAsync(GetAppRolesPaged pagedInput);
+    Task<PagedDataResultDto<AppRoleDto>> GetPagedListAsync(GetAppRolesPaged pagedInput);
     Task<List<AppRoleDto>> GetFilterListAsync(GetAppRolesFilter filterInput);
     Task<List<AppRoleDto>> GetSearchListAsync(GetAppRolesSearch searchInput);
 

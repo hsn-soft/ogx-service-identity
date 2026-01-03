@@ -1,4 +1,4 @@
-namespace Ogx.IdentityService.Application;
+namespace Ogx.IdentityService;
 
 public sealed class EventHandlersAssemblyMarker
 {

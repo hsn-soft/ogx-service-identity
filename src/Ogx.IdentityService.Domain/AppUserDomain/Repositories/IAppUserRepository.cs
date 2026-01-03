@@ -1,53 +1,26 @@
 using System.Linq.Expressions;
-using Ogx.IdentityService.Domain.AppUserDomain.Entities;
+using HsnSoft.Base.Domain.Models;
 using JetBrains.Annotations;
+using Ogx.IdentityService.Domain.AppUserDomain.Entities;
 
 namespace Ogx.IdentityService.Domain.AppUserDomain.Repositories;
 
 public interface IAppUserRepository
 {
-    Task<List<AppUser>> GetPagedListWithFiltersAsync(
-        Guid? tenantId,
-        [CanBeNull] string username = null,
-        [CanBeNull] string email = null,
-        bool? emailConfirmed = null,
-        [CanBeNull] string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        [CanBeNull] string name = null,
-        [CanBeNull] string surname = null,
-        List<Guid> roleIds = null,
-        [CanBeNull] string sorting = null,
-        int maxResultCount = int.MaxValue,
-        int skipCount = 0,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<long> GetCountWithFiltersAsync(
-        Guid? tenantId,
-        [CanBeNull] string username = null,
-        [CanBeNull] string email = null,
-        bool? emailConfirmed = null,
-        [CanBeNull] string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        [CanBeNull] string name = null,
-        [CanBeNull] string surname = null,
+    Task<PagedQueryResult<AppUser>> GetPageListAsync(
+        PagedQueryOptions<AppUser> options,
+        Guid? tenantId = null,
         List<Guid> roleIds = null,
         CancellationToken cancellationToken = default
     );
 
-    Task<List<AppUser>> GetFilterListAsync(
-        Guid? tenantId,
-        [CanBeNull] string username = null,
-        [CanBeNull] string email = null,
-        bool? emailConfirmed = null,
-        [CanBeNull] string phoneNumber = null,
-        bool? phoneConfirmed = null,
-        [CanBeNull] string name = null,
-        [CanBeNull] string surname = null,
-        List<Guid> roleIds = null,
-        [CanBeNull] string sorting = null,
+    Task<List<AppUser>> GetListAsync(
+        ListQueryOptions<AppUser> options,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default
     );
+
+
 
     Task<List<AppUser>> GetSearchListAsync(
         Guid? tenantId,

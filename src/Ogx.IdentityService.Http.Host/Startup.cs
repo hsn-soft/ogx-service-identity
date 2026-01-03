@@ -1,5 +1,9 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using HsnSoft.Base.AspNetCore.Localization;
+using HsnSoft.Base.Data;
+using HsnSoft.Base.Tracing;
+using Microsoft.AspNetCore.Identity;
 using Ogx.IdentityService.Application;
 using Ogx.IdentityService.Domain.AppRoleDomain.Entities;
 using Ogx.IdentityService.Domain.AppUserDomain.Entities;
@@ -12,10 +16,6 @@ using Ogx.Shared.Hosting;
 using Ogx.Shared.Hosting.Microservices;
 using Ogx.Shared.Hosting.Microservices.Middlewares;
 using Ogx.Shared.Hosting.Middlewares;
-using HsnSoft.Base.AspNetCore.Localization;
-using HsnSoft.Base.Data;
-using HsnSoft.Base.Tracing;
-using Microsoft.AspNetCore.Identity;
 
 namespace Ogx.IdentityService;
 
@@ -107,8 +107,8 @@ public sealed class Startup
             {
                 endpoints.MapControllers();
 
-                var buildNumber = Environment.GetEnvironmentVariable("BUILD_NUMBER");
-                var appVersion = !string.IsNullOrWhiteSpace(buildNumber) ? $"v1.0.{buildNumber}" : "v1.0.0";
+                string buildNumber = Environment.GetEnvironmentVariable("BUILD_NUMBER");
+                string appVersion = !string.IsNullOrWhiteSpace(buildNumber) ? $"v1.0.{buildNumber}" : "v1.0.0";
                 endpoints.MapGet("/", () => $"OGX {ApplicationIdentifier.AppName} | {ApplicationIdentifier.AppId} | {WebHostEnvironment.EnvironmentName} | {appVersion}");
             }
         });

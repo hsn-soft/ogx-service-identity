@@ -1,4 +1,3 @@
-using Ogx.IdentityService.Application;
 using HsnSoft.Base.AspNetCore.Serilog;
 using HsnSoft.Base.Tracing;
 using Microsoft.AspNetCore;
@@ -52,7 +51,7 @@ public static class Program
                 var env = context.HostingEnvironment;
                 if (!env.IsDevelopment()) return;
 
-                options.ListenAnyIP(6610);
+                options.ListenAnyIP(7410);
             })
             .ConfigureAppConfiguration(x => x.AddConfiguration(GetConfiguration()))
             .UseStartup<Startup>()

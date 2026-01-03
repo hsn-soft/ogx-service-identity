@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="..\..\common.version.props" />
+    <Import Project="..\..\common.test.props" />
     <Import Project="..\..\common.props" />
 
     <PropertyGroup>

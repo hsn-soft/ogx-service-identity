@@ -24,10 +24,38 @@ spec:
       labels:
         app: ogx-service-identity
     spec:
-      terminationGracePeriodSeconds: 20 # successfully wait termination
+      terminationGracePeriodSeconds: 10 # successfully wait termination
       securityContext:
         fsGroupChangePolicy: Always
         fsGroup: 1001
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: agentpool
+                    operator: In
+                    values:
+                      - appspool  # Node pool select
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ogx-service-identity
+                topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: "kubernetes.azure.com/scalesetpriority"
+          operator: "Equal"
+          value: "spot"
+          effect: "NoSchedule"
+        - key: "pool"
+          operator: "Equal"
+          value: "application"
+          effect: "NoSchedule"
       containers:
         - name: ogx-service-identity-container
           image: ${IMAGE_NAME}:${BUILD_ID}
@@ -35,10 +63,10 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 256Mi
+              memory: 128Mi
             limits:
               cpu: 100m
-              memory: 512Mi
+              memory: 256Mi
           env:
             - name: BUILD_NUMBER
               value: "${BUILD_ID}"
@@ -98,22 +126,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 256Mi
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-        - key: "kubernetes.azure.com/scalesetpriority"
-          operator: "Equal"
-          value: "spot"
-          effect: "NoSchedule"
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: agentpool
-                    operator: In
-                    values:
-                      - memorypool
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -130,7 +142,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: ogx-service-identity-service
+  name: ogx-service-identity-svc
   namespace: ns-ogx-prod-apps
 spec:
   type: ClusterIP

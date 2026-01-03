@@ -1,8 +1,7 @@
-﻿using System;
+﻿#nullable disable
+
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-
-#nullable disable
 
 namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
 {

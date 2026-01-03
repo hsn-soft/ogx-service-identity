@@ -1,14 +1,18 @@
+using System.Globalization;
 using System.Net;
+using HsnSoft.Base;
+using HsnSoft.Base.Application.Dtos;
+using HsnSoft.Base.Domain.Models;
+using HsnSoft.Base.Logging;
+using HsnSoft.Base.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Filters;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Submits;
 using Ogx.IdentityService.Application.Contracts.AppUserDomain.Services;
+using Ogx.IdentityService.Domain.AppUserDomain.Consts;
 using Ogx.IdentityService.Domain.AppUserDomain.Entities;
 using Ogx.IdentityService.Domain.AppUserDomain.Repositories;
-using HsnSoft.Base;
-using HsnSoft.Base.Application.Dtos;
-using HsnSoft.Base.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Ogx.IdentityService.Application.Services;
 
@@ -46,31 +50,56 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
         return resultItem;
     }
 
-    public async Task<PagedResultDto<AppUserDto>> GetPagedListAsync(GetAppUsersPaged pagedInput)
+    public async Task<PagedDataResultDto<AppUserDto>> GetPagedListAsync(GetAppUsersPaged pagedInput, CancellationToken cancellationToken = default)
     {
         if (pagedInput == null)
         {
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        var roleIds = pagedInput.Roles is { Count: > 0 } ? pagedInput.Roles.Select(x => x.RoleId).ToList() : null;
+        pagedInput.SearchText = pagedInput.SearchText?.ToLower(new CultureInfo("en-US"));
+        pagedInput.UserName = pagedInput.UserName?.ToLower(new CultureInfo("en-US"));
+        pagedInput.Email = pagedInput.Email?.ToLower(new CultureInfo("en-US"));
+        pagedInput.PhoneNumber = pagedInput.PhoneNumber?.ToLower(new CultureInfo("en-US"));
+        pagedInput.Name = pagedInput.Name?.ToLower(new CultureInfo("en-US"));
+        pagedInput.Surname = pagedInput.Surname?.ToLower(new CultureInfo("en-US"));
 
-        long totalCount = await _appUserRepository.GetCountWithFiltersAsync(pagedInput.TenantId,
-            pagedInput.UserName, pagedInput.Email, pagedInput.EmailConfirmed, pagedInput.PhoneNumber, pagedInput.PhoneNumberConfirmed,
-            pagedInput.Name, pagedInput.Surname, roleIds);
+        var filter = new FilterBuilder<AppUser>()
+            .And(!string.IsNullOrWhiteSpace(pagedInput.SearchText)
+                ? e => e.UserName.ToLower().Contains(pagedInput.SearchText)
+                       || e.Email.ToLower().Contains(pagedInput.SearchText)
+                       || e.Name.ToLower().Contains(pagedInput.SearchText)
+                       || e.Surname.ToLower().Contains(pagedInput.SearchText)
+                       || e.PhoneNumber.Contains(pagedInput.SearchText)
+                : null)
+            .And(!string.IsNullOrWhiteSpace(pagedInput.UserName) ? e => e.UserName.ToLower().Contains(pagedInput.UserName) : null)
+            .And(!string.IsNullOrWhiteSpace(pagedInput.Email) ? e => e.Email.ToLower().Contains(pagedInput.Email) : null)
+            .And(pagedInput.EmailConfirmed.HasValue ? e => e.EmailConfirmed == pagedInput.EmailConfirmed.Value : null)
+            .And(!string.IsNullOrWhiteSpace(pagedInput.PhoneNumber) ? e => e.PhoneNumber.ToLower().Contains(pagedInput.PhoneNumber) : null)
+            .And(pagedInput.PhoneNumberConfirmed.HasValue ? e => e.PhoneNumberConfirmed == pagedInput.PhoneNumberConfirmed.Value : null)
+            .And(!string.IsNullOrWhiteSpace(pagedInput.Name) ? e => e.Name.ToLower().Contains(pagedInput.Name) : null)
+            .And(!string.IsNullOrWhiteSpace(pagedInput.Surname) ? e => e.Surname.ToLower().Contains(pagedInput.Surname) : null)
+            .Build();
 
-        var items = await _appUserRepository.GetPagedListWithFiltersAsync(pagedInput.TenantId,
-            pagedInput.UserName, pagedInput.Email, pagedInput.EmailConfirmed, pagedInput.PhoneNumber, pagedInput.PhoneNumberConfirmed,
-            pagedInput.Name, pagedInput.Surname, roleIds,
-            pagedInput.SortingText, pagedInput.MaxResultCount, pagedInput.ResultPageNumber);
+        var result = await _appUserRepository.GetPageListAsync(
+            // extra filters
+            tenantId: pagedInput.TenantId,
+            roleIds: pagedInput.Roles is { Count: > 0 } ? pagedInput.Roles.Select(x => x.RoleId).ToList() : null,
 
-        if (items == null)
-        {
-            throw new BaseHttpException((int)HttpStatusCode.RequestTimeout);
-        }
+            // standard filter
+            options: new PagedQueryOptions<AppUser>
+            {
+                Filter = filter,
+                OrderByDynamic = string.IsNullOrWhiteSpace(pagedInput.SortingText)
+                    ? AppUserConsts.GetDefaultSorting()
+                    : pagedInput.SortingText,
+                PageNumber = pagedInput.PageNumber,
+                MaxResultCount = pagedInput.MaxResultCount
+            },
+            cancellationToken: cancellationToken);
 
         var resultItems = new List<AppUserDto>();
-        foreach (var item in items)
+        foreach (var item in result.Items)
         {
             var resultItem = Mapper.Map<AppUser, AppUserDto>(item);
             resultItem.Roles = await _appUserRepository.GetUserRolesAsync(item);
@@ -84,40 +113,57 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
                 ? resultItem.Email.Split("#")[0]
                 : resultItem.Email;
 
-            if (string.IsNullOrWhiteSpace(resultItem.AvatarSuffixUrl)) { resultItem.AvatarSuffixUrl = "/images/no-image.webp"; }
+            if (string.IsNullOrWhiteSpace(resultItem.AvatarSuffixUrl))
+            {
+                resultItem.AvatarSuffixUrl = "/images/no-image.webp";
+            }
 
             resultItems.Add(resultItem);
         }
 
-        return new PagedResultDto<AppUserDto> { TotalCount = totalCount, Items = resultItems };
+        return new PagedDataResultDto<AppUserDto>(result.TotalCount, pagedInput.PageNumber, pagedInput.MaxResultCount, resultItems);
     }
 
-    public async Task<List<AppUserDto>> GetFilterListAsync(GetAppUsersFilter filterInput)
+    public async Task<List<AppUserDto>> GetFilterListAsync(GetAppUsersFilter filterInput, CancellationToken cancellationToken = default)
     {
         if (filterInput == null)
         {
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        var items = await _appUserRepository.GetFilterListAsync(filterInput.TenantId,
-            filterInput.UserName, filterInput.Email, filterInput.EmailConfirmed, filterInput.PhoneNumber, filterInput.PhoneNumberConfirmed,
-            filterInput.Name, filterInput.Surname, null,
-            filterInput.SortingText);
+        filterInput.UserName = filterInput.UserName?.ToLower(new CultureInfo("en-US"));
+        filterInput.Email = filterInput.Email?.ToLower(new CultureInfo("en-US"));
+        filterInput.PhoneNumber = filterInput.PhoneNumber?.ToLower(new CultureInfo("en-US"));
+        filterInput.Name = filterInput.Name?.ToLower(new CultureInfo("en-US"));
+        filterInput.Surname = filterInput.Surname?.ToLower(new CultureInfo("en-US"));
 
-        if (items == null)
-        {
-            throw new BaseHttpException((int)HttpStatusCode.RequestTimeout);
-        }
+        var filter = new FilterBuilder<AppUser>()
+            .And(!string.IsNullOrWhiteSpace(filterInput.UserName) ? e => e.UserName.ToLower().Contains(filterInput.UserName) : null)
+            .And(!string.IsNullOrWhiteSpace(filterInput.Email) ? e => e.Email.ToLower().Contains(filterInput.Email) : null)
+            .And(filterInput.EmailConfirmed.HasValue ? e => e.EmailConfirmed == filterInput.EmailConfirmed.Value : null)
+            .And(!string.IsNullOrWhiteSpace(filterInput.PhoneNumber) ? e => e.PhoneNumber.ToLower().Contains(filterInput.PhoneNumber) : null)
+            .And(filterInput.PhoneNumberConfirmed.HasValue ? e => e.PhoneNumberConfirmed == filterInput.PhoneNumberConfirmed.Value : null)
+            .And(!string.IsNullOrWhiteSpace(filterInput.Name) ? e => e.Name.ToLower().Contains(filterInput.Name) : null)
+            .And(!string.IsNullOrWhiteSpace(filterInput.Surname) ? e => e.Surname.ToLower().Contains(filterInput.Surname) : null)
+            .Build();
 
-        foreach (var item in items)
-        {
-            var result = Mapper.Map<AppUser, AppUserDto>(item);
-            result.Roles = await _appUserRepository.GetUserRolesAsync(item);
-            result.Roles ??= new List<string>();
-        }
+        var result = await _appUserRepository.GetListAsync(
+            // extra filters
+            tenantId: filterInput.TenantId,
+
+            // standart filter
+            options: new ListQueryOptions<AppUser>
+            {
+                Filter = filter,
+                OrderByDynamic = string.IsNullOrWhiteSpace(filterInput.SortingText)
+                    ? AppUserConsts.GetDefaultSorting()
+                    : filterInput.SortingText,
+                MaxResultCount = filterInput.MaxResultCount
+            },
+            cancellationToken: cancellationToken);
 
         var resultItems = new List<AppUserDto>();
-        foreach (var item in items)
+        foreach (var item in result)
         {
             var resultItem = Mapper.Map<AppUser, AppUserDto>(item);
             resultItem.Roles = await _appUserRepository.GetUserRolesAsync(item);
