@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\common.version.props" />
+    <Import Project="..\..\common.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PackageId>Ogx.IdentityService.Application</PackageId>
+        <RootNamespace>Ogx.IdentityService.Application</RootNamespace>
+        <Title>HsnSoft Ogx Identity Service Application</Title>
+        <Description>HsnSoft Ogx Identity Service Application</Description>
+        <PackageTags>HsnSoft Ogx Identity Service Application</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HsnSoft.Base.Ddd.Application" Version="$(HsnSoftFrameworkVersion)" />
+        <PackageReference Include="HsnSoft.Base.Authorization" Version="$(HsnSoftFrameworkVersion)" />
+        <PackageReference Include="HsnSoft.Base.AutoMapper" Version="$(HsnSoftFrameworkVersion)" />
+        <!--<ProjectReference Include="..\..\..\..\..\..\hsn-soft\base-framework\src\HsnSoft.Base.Ddd.Application\HsnSoft.Base.Ddd.Application.csproj" />-->
+        <!--<ProjectReference Include="..\..\..\..\..\..\hsn-soft\base-framework\src\HsnSoft.Base.Authorization\HsnSoft.Base.Authorization.csproj" />-->
+        <!--<ProjectReference Include="..\..\..\..\..\..\hsn-soft\base-framework\src\HsnSoft.Base.AutoMapper\HsnSoft.Base.AutoMapper.csproj" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ogx.Shared.Contracts" Version="$(OgxSharedVersion)" />
+        <!--<ProjectReference Include="..\..\..\..\shared\src\Ogx.Shared.Contracts\Ogx.Shared.Contracts.csproj" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Ogx.IdentityService.Domain\Ogx.IdentityService.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

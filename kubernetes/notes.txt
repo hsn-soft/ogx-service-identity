@@ -1,0 +1,14 @@
+--PODS
+kubectl get pods -n ns-ogx-prod-apps -owide --watch
+kubectl logs -n ns-ogx-prod-apps -f ogx-service-event-manager-deployment-9f6f8f97f-pmtdt
+
+-- KUBERNETES EVENT LOGS
+kubectl get events -n ns-ogx-prod-apps --sort-by='.metadata.creationTimestamp'
+
+-- DEPLOYMENT DESCRIBE
+kubectl get deployments -n ns-ogx-prod-apps
+kubectl describe deployments -n ns-ogx-prod-apps ogx-service-event-manager-deployment
+
+-- SERVICE DESCRIBE
+kubectl get svc -n ns-ogx-prod-apps -owide
+kubectl describe service -n ns-ogx-prod-apps ogx-service-event-manager-service

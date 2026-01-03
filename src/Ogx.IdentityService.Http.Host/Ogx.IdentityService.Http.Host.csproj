@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <Import Project="..\..\common.version.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>Ogx.IdentityService</RootNamespace>
+        <Title>HsnSoft Ogx Identity Service</Title>
+        <Product>HsnSoft Ogx Identity Service</Product>
+        <Description>HsnSoft Ogx Identity Service</Description>
+        <Authors>HsnSoft</Authors>
+        <Copyright>2024</Copyright>
+        <NoWarn>$(NoWarn);CS1591;CS1998;</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ogx.Shared.Hosting.Microservices" Version="$(OgxSharedVersion)" />
+        <!--<ProjectReference Include="..\..\..\..\shared\src\Ogx.Shared.Hosting.Microservices\Ogx.Shared.Hosting.Microservices.csproj" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Ogx.IdentityService.Application\Ogx.IdentityService.Application.csproj" />
+        <ProjectReference Include="..\Ogx.IdentityService.EntityFrameworkCore\Ogx.IdentityService.EntityFrameworkCore.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\public_key.xml">
+            <Link>public_key.xml</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Logs\**" />
+        <Content Remove="Logs\**" />
+        <EmbeddedResource Remove="Logs\**" />
+        <None Remove="Logs\**" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,17 @@
+dotnet tool update --global dotnet-ef
+
+cd src/Ogx.IdentityService.EntityFrameworkCore/
+
+
+dotnet ef migrations add InitialCreate --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityAppDbContext -o Migrations/App
+dotnet ef database update --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityAppDbContext
+
+dotnet ef database remove --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityAppDbContext
+
+
+
+dotnet ef migrations add InitialCreate --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityServiceDbContext -o Migrations/Service
+dotnet ef database update --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityServiceDbContext
+
+dotnet ef database remove --context Ogx.IdentityService.EntityFrameworkCore.Context.IdentityServiceDbContext
+
