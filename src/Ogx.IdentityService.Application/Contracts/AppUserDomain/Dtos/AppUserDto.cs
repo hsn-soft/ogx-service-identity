@@ -24,11 +24,6 @@ public sealed class AppUserDto
     // public bool LockoutEnabled { get; set; }
     // public int AccessFailedCount { get; set; }
 
-    // Custom identity model
-    public Guid? TenantId { get; set; }
-    [CanBeNull]
-    public string TenantDomain { get; set; }
-
     [CanBeNull]
     public string Name { get; set; }
 

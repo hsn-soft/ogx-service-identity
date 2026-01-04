@@ -49,10 +49,10 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        long totalCount = await _appRoleRepository.GetCountWithFiltersAsync(pagedInput.TenantId,
+        long totalCount = await _appRoleRepository.GetCountWithFiltersAsync(
             pagedInput.Name, pagedInput.IsDefault, pagedInput.IsStatic, pagedInput.IsPublic);
 
-        var items = await _appRoleRepository.GetPagedListWithFiltersAsync(pagedInput.TenantId,
+        var items = await _appRoleRepository.GetPagedListWithFiltersAsync(
             pagedInput.Name, pagedInput.IsDefault, pagedInput.IsStatic, pagedInput.IsPublic,
             pagedInput.SortingText, pagedInput.MaxResultCount, pagedInput.PageNumber);
 
@@ -71,7 +71,7 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        var items = await _appRoleRepository.GetFilterListAsync(filterInput.TenantId,
+        var items = await _appRoleRepository.GetFilterListAsync(
             filterInput.Name, filterInput.IsDefault, filterInput.IsStatic, filterInput.IsPublic,
             filterInput.SortingText);
 
@@ -90,7 +90,7 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        var items = await _appRoleRepository.GetSearchListAsync(searchInput.TenantId,
+        var items = await _appRoleRepository.GetSearchListAsync(
             searchInput.SearchText, searchInput.SortingText, searchInput.MaxResultCount);
 
         if (items == null)
@@ -109,8 +109,6 @@ public sealed class AppRoleAppService : ApplicationServiceBase, IAppRoleAppServi
         }
 
         var appRole = await _appRoleRepository.CreateAsync(
-            tenantId: input.TenantId ?? Guid.Empty,
-            tenantDomain: input.TenantDomain,
             name: input.Name ?? string.Empty,
             isDefault: input.IsDefault,
             isStatic: input.IsStatic,

@@ -18,8 +18,6 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantDomain = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     IsDefault = table.Column<bool>(type: "boolean", nullable: false),
                     IsStatic = table.Column<bool>(type: "boolean", nullable: false),
                     IsPublic = table.Column<bool>(type: "boolean", nullable: false),
@@ -38,8 +36,7 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantDomain = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    IsSystemUser = table.Column<bool>(type: "boolean", nullable: false),
                     Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     Surname = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     DefaultLanguage = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: true),
@@ -182,11 +179,6 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "RoleTenantIndex",
-                table: "AppRoles",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_AppUserClaims_UserId",
                 table: "AppUserClaims",
                 column: "UserId");
@@ -211,11 +203,6 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                 table: "AppUsers",
                 column: "NormalizedUserName",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "UserTenantIndex",
-                table: "AppUsers",
-                column: "TenantId");
         }
 
         /// <inheritdoc />

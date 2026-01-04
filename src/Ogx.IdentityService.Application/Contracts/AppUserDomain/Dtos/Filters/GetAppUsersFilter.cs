@@ -5,8 +5,6 @@ namespace Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Filters;
 
 public sealed class GetAppUsersFilter : SortedAndLimitedDataRequestDto
 {
-    public Guid? TenantId { get; set; } = null;
-
     // Default identity model
     [CanBeNull]
     public string UserName { get; set; } = null;

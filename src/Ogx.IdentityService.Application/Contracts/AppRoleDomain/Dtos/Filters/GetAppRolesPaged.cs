@@ -5,8 +5,6 @@ namespace Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Filters;
 
 public sealed class GetAppRolesPaged : PagedDataRequestDto
 {
-    public Guid? TenantId { get; set; } = null;
-
     [CanBeNull]
     public string Name { get; set; } = null;
 

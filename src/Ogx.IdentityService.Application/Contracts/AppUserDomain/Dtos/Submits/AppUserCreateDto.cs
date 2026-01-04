@@ -11,11 +11,6 @@ namespace Ogx.IdentityService.Application.Contracts.AppUserDomain.Dtos.Submits;
 
 public sealed class AppUserCreateDto : IValidatableObject
 {
-    public Guid? TenantId { get; set; }
-
-    [CanBeNull]
-    public string TenantDomain { get; set; }
-
     [CanBeNull]
     public string UserName { get; set; }
 
@@ -39,6 +34,8 @@ public sealed class AppUserCreateDto : IValidatableObject
 
     public List<string> Roles { get; set; }
 
+    public bool IsSystemUser { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         var factory = validationContext.GetService(typeof(IStringLocalizerFactory)) as IStringLocalizerFactory;
@@ -48,20 +45,6 @@ public sealed class AppUserCreateDto : IValidatableObject
             typeof(ValidationResource),
             typeof(SharedResource)
         });
-
-        if (!CheckSafe.NotNull(TenantId, nameof(TenantId)))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.IsNotEmpty], new[] { localizer?["TenantId"].ToString() });
-        }
-
-        if (!CheckSafe.NotNullOrEmpty(TenantDomain, nameof(TenantDomain)))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.Required], new[] { localizer?["TenantDomain"].ToString() });
-        }
-        else if (!CheckSafe.Length(TenantDomain, nameof(TenantDomain), AppUserConsts.TenantDomainMaxLength))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.MaxLength, AppUserConsts.TenantDomainMaxLength], new[] { localizer?["TenantDomain"].ToString() });
-        }
 
         if (!CheckSafe.NotNullOrEmpty(UserName, nameof(UserName)))
         {

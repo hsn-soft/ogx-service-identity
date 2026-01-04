@@ -11,11 +11,6 @@ namespace Ogx.IdentityService.Application.Contracts.AppRoleDomain.Dtos.Submits;
 
 public sealed class AppRoleCreateDto : IValidatableObject
 {
-    public Guid? TenantId { get; set; }
-
-    [CanBeNull]
-    public string TenantDomain { get; set; }
-
     [CanBeNull]
     public string Name { get; set; }
 
@@ -32,20 +27,6 @@ public sealed class AppRoleCreateDto : IValidatableObject
             typeof(ValidationResource),
             typeof(SharedResource)
         });
-
-        if (!CheckSafe.NotNull(TenantId, nameof(TenantId)))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.IsNotEmpty], new[] { localizer?["TenantId"].ToString() });
-        }
-
-        if (!CheckSafe.NotNullOrEmpty(TenantDomain, nameof(TenantDomain)))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.Required], new[] { localizer?["TenantDomain"].ToString() });
-        }
-        else if (!CheckSafe.Length(TenantDomain, nameof(TenantDomain), AppRoleConsts.TenantDomainMaxLength))
-        {
-            yield return new ValidationResult(localizer?[ValidationResourceKeys.MaxLength, AppRoleConsts.TenantDomainMaxLength], new[] { localizer?["TenantDomain"].ToString() });
-        }
 
         if (!CheckSafe.NotNullOrEmpty(Name, nameof(Name)))
         {

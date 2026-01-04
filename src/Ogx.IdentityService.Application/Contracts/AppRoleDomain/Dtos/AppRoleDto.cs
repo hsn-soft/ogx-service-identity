@@ -9,11 +9,6 @@ public sealed class AppRoleDto
     [CanBeNull]
     public string Name { get; set; }
 
-    // Custom identity model
-    public Guid? TenantId { get; set; }
-    [CanBeNull]
-    public string TenantDomain { get; set; }
-
     public bool IsDefault { get; set; }
     public bool IsStatic { get; set; }
     public bool IsPublic { get; set; }

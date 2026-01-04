@@ -7,7 +7,6 @@ namespace Ogx.IdentityService.Domain.AppRoleDomain.Repositories;
 public interface IAppRoleRepository
 {
     Task<List<AppRole>> GetPagedListWithFiltersAsync(
-        Guid? tenantId,
         [CanBeNull] string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -19,7 +18,6 @@ public interface IAppRoleRepository
     );
 
     Task<long> GetCountWithFiltersAsync(
-        Guid? tenantId,
         [CanBeNull] string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -28,7 +26,6 @@ public interface IAppRoleRepository
     );
 
     Task<List<AppRole>> GetFilterListAsync(
-        Guid? tenantId,
         [CanBeNull] string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -38,7 +35,6 @@ public interface IAppRoleRepository
     );
 
     Task<List<AppRole>> GetSearchListAsync(
-        Guid? tenantId,
         [CanBeNull] string searchText = null,
         [CanBeNull] string sorting = null,
         int maxResultCount = int.MaxValue,
@@ -52,13 +48,13 @@ public interface IAppRoleRepository
     [ItemCanBeNull]
     Task<AppRole> FindAsync(Expression<Func<AppRole, bool>> predicate);
 
-    Task<AppRole> CreateAsync(Guid tenantId, [NotNull] string tenantDomain,
+    Task<AppRole> CreateAsync(
         [NotNull] string name,
         bool isDefault,
         bool isStatic,
         bool isPublic);
 
-    Task<AppRole> CreateAsync(Guid id, Guid tenantId, [NotNull] string tenantDomain,
+    Task<AppRole> CreateAsync(Guid id,
         [NotNull] string name,
         bool isDefault,
         bool isStatic,

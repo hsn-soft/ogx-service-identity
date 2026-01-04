@@ -1,24 +1,17 @@
 using System.Globalization;
 using System.Text;
 using Ogx.IdentityService.Domain.AppUserDomain.Consts;
-using Ogx.Shared.Helper;
-using Ogx.Shared.Helper.Consts;
 using Ogx.Shared.Localization;
 using HsnSoft.Base;
-using HsnSoft.Base.MultiTenancy;
-using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace Ogx.IdentityService.Domain.AppUserDomain.Entities;
 
-public sealed class AppUser : IdentityUser<Guid>, ISoftDelete, IMultiTenant
+public sealed class AppUser : IdentityUser<Guid>, ISoftDelete
 {
     public bool IsDeleted { get; internal set; }
 
-    public Guid TenantId { get; private set; }
-
-    [NotNull]
-    public string TenantDomain { get; private set; }
+    public bool IsSystemUser { get; private set; }
 
     public string Name { get; private set; }
 
@@ -28,27 +21,24 @@ public sealed class AppUser : IdentityUser<Guid>, ISoftDelete, IMultiTenant
 
     public string AvatarSuffixUrl { get; internal set; }
 
-    // public user => IsSystemUser : false, IsTenantUser: false
-    public bool IsSystemUser => TenantId == default && (TenantDomain ?? string.Empty).Equals(DefaultDomainNames.System);
-    public bool IsTenantUser => TenantId != default && !IsSystemUser;
 
     private AppUser()
     {
-        TenantDomain = string.Empty;
         UserName = string.Empty;
         Email = string.Empty;
     }
 
-    internal AppUser(Guid id, Guid tenantId, string tenantDomain,
+    internal AppUser(Guid id,
         string userName, string email, string phone,
         string name,
         string surname,
         string defaultLanguage,
-        string avatarSuffixUrl
+        string avatarSuffixUrl,
+        bool isSystemUser = false
     ) : this()
     {
         Id = id;
-        SetTenant(tenantId, tenantDomain);
+        IsSystemUser = isSystemUser;
         SetDefaultLanguage(defaultLanguage);
 
         SetUserName(userName);
@@ -57,12 +47,6 @@ public sealed class AppUser : IdentityUser<Guid>, ISoftDelete, IMultiTenant
         SetName(name);
         SetSurname(surname);
         AvatarSuffixUrl = avatarSuffixUrl;
-    }
-
-    internal void SetTenant(Guid tenantId, string tenantDomain)
-    {
-        TenantId = tenantId;
-        TenantDomain = LocalizedModelValidator.NotNullOrWhiteSpace(tenantDomain, $"{nameof(TenantDomain)}", AppUserConsts.TenantDomainMaxLength);
     }
 
     internal void SetDefaultLanguage(string defaultLanguage)
