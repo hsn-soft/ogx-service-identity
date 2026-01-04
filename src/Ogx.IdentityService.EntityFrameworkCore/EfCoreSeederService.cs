@@ -35,9 +35,7 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
         var localizerFactory = scope.ServiceProvider.GetRequiredService<IStringLocalizerFactory>();
         var localizer = localizerFactory.CreateMultiple(new List<Type>
         {
-            typeof(IdentityServiceResource),
-            typeof(ValidationResource),
-            typeof(SharedResource)
+            typeof(IdentityServiceResource), typeof(ValidationResource), typeof(SharedResource)
         });
 
         var isReadyDatabase = false;
@@ -51,7 +49,8 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                 {
                     // apply pending migrations
                     await appDbContext.Database.MigrateAsync(cancellationToken: cancellationToken);
-                    logger.LogDebug("{WorkerName} | PENDING MIGRATIONS SUCCESSFULLY APPLIED (APP)", nameof(EfCoreSeederService));
+                    logger.LogDebug("{WorkerName} | PENDING MIGRATIONS SUCCESSFULLY APPLIED (APP)",
+                        nameof(EfCoreSeederService));
                 }
                 else
                 {
@@ -62,7 +61,8 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                 {
                     // apply pending migrations
                     await dbContext.Database.MigrateAsync(cancellationToken: cancellationToken);
-                    logger.LogDebug("{WorkerName} | PENDING MIGRATIONS SUCCESSFULLY APPLIED (SERVICE)", nameof(EfCoreSeederService));
+                    logger.LogDebug("{WorkerName} | PENDING MIGRATIONS SUCCESSFULLY APPLIED (SERVICE)",
+                        nameof(EfCoreSeederService));
                 }
                 else
                 {
@@ -81,7 +81,8 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
         }
         catch (Exception e)
         {
-            logger.LogError("{WorkerName} | {OperationStatus} | {Error}", nameof(EfCoreSeederService), "INIT_ERROR", e.Message);
+            logger.LogError("{WorkerName} | {OperationStatus} | {Error}", nameof(EfCoreSeederService), "INIT_ERROR",
+                e.Message);
         }
 
         if (isReadyDatabase)
@@ -108,7 +109,8 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                         await roleManager.AddClaimAsync(draftAppRole, new Claim("role_name",
                             StringHelper.FirstCharCapitalize(seedRole.Name, new[] { "-", "_" })));
 
-                        logger.LogDebug("{WorkerName} | SEED ROLE -> {RoleName} added", nameof(EfCoreSeederService), seedRole.Name);
+                        logger.LogDebug("{WorkerName} | SEED ROLE -> {RoleName} added", nameof(EfCoreSeederService),
+                            seedRole.Name);
                     }
                 }
 
@@ -119,7 +121,7 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                     foreach (var seedUser in SeedUsers.Users)
                     {
                         var draftAppUser = new AppUser(
-                            isSystemUser:true,
+                            isSystemUser: seedUser.IsSystemUser,
                             id: seedUser.UserId,
                             userName: seedUser.Username,
                             email: seedUser.Email,
@@ -127,7 +129,9 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                             name: seedUser.GivenName,
                             surname: seedUser.FamilyName,
                             defaultLanguage: string.IsNullOrWhiteSpace(seedUser.Lang) ? "en" : seedUser.Lang,
-                            avatarSuffixUrl: string.IsNullOrWhiteSpace(seedUser.AvatarUrl) ? "/images/no-image.webp" : seedUser.AvatarUrl
+                            avatarSuffixUrl: string.IsNullOrWhiteSpace(seedUser.AvatarUrl)
+                                ? "/images/no-image.webp"
+                                : seedUser.AvatarUrl
                         );
 
                         var result = string.IsNullOrWhiteSpace(seedUser.PlainPassword)
@@ -142,13 +146,15 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                             await userManager.AddToRolesAsync(draftAppUser, seedUser.Roles);
                         }
 
-                        logger.LogDebug("{WorkerName} | SEED USER -> {UserName} added", nameof(EfCoreSeederService), seedUser.Username);
+                        logger.LogDebug("{WorkerName} | SEED USER -> {UserName} added", nameof(EfCoreSeederService),
+                            seedUser.Username);
                     }
                 }
             }
             catch (Exception e)
             {
-                logger.LogError("{WorkerName} | {OperationStatus}: {Error}", nameof(EfCoreSeederService), "SEED_ERROR", e.Message);
+                logger.LogError("{WorkerName} | {OperationStatus}: {Error}", nameof(EfCoreSeederService), "SEED_ERROR",
+                    e.Message);
             }
         }
     }

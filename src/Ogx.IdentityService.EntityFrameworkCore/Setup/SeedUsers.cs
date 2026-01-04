@@ -11,6 +11,7 @@ internal static class SeedUsers
         new SeedUser
         {
             UserId = Guid.Parse("4A670F80-5592-44D3-AFD5-C8DFCA3679E4"),
+            IsSystemUser = true,
             Username = DefaultRoleNames.SystemAdmin,
             PlainPassword = DefaultPlainPassword,
             GivenName = DefaultRoleNames.SystemAdmin,
@@ -22,6 +23,7 @@ internal static class SeedUsers
         new SeedUser
         {
             UserId = Guid.Parse("BA271C49-4FCD-4143-8A17-5B6B7452AF66"),
+            IsSystemUser = true,
             Username = DefaultRoleNames.SystemUser,
             PlainPassword = DefaultPlainPassword,
             GivenName = DefaultRoleNames.SystemUser,
@@ -33,6 +35,7 @@ internal static class SeedUsers
         new SeedUser
         {
             UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            IsSystemUser = false,
             Username = "hsnsh",
             PlainPassword = DefaultPlainPassword,
             GivenName = "Hasan",
@@ -60,4 +63,5 @@ internal sealed class SeedUser
 
     public string Lang { get; set; }
     public string AvatarUrl { get; set; }
+    public bool IsSystemUser { get; set; }
 }
