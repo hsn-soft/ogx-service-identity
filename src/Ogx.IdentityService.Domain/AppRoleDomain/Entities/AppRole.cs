@@ -1,23 +1,15 @@
 using System.Globalization;
 using System.Text;
 using Ogx.IdentityService.Domain.AppRoleDomain.Consts;
-using Ogx.Shared.Helper;
 using Ogx.Shared.Localization;
 using HsnSoft.Base;
-using HsnSoft.Base.MultiTenancy;
-using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace Ogx.IdentityService.Domain.AppRoleDomain.Entities;
 
-public sealed class AppRole : IdentityRole<Guid>, ISoftDelete, IMultiTenant
+public sealed class AppRole : IdentityRole<Guid>, ISoftDelete
 {
     public bool IsDeleted { get; internal set; }
-
-    public Guid TenantId { get; private set; }
-
-    [NotNull]
-    public string TenantDomain { get; private set; }
 
     public bool IsDefault { get; internal set; }
     public bool IsStatic { get; internal set; }
@@ -25,11 +17,10 @@ public sealed class AppRole : IdentityRole<Guid>, ISoftDelete, IMultiTenant
 
     private AppRole()
     {
-        TenantDomain = string.Empty;
         Name = string.Empty;
     }
 
-    internal AppRole(Guid id, Guid tenantId, string tenantDomain,
+    internal AppRole(Guid id,
         string name,
         bool isDefault = false,
         bool isStatic = false,
@@ -37,18 +28,11 @@ public sealed class AppRole : IdentityRole<Guid>, ISoftDelete, IMultiTenant
     ) : this()
     {
         Id = id;
-        SetTenant(tenantId, tenantDomain);
 
         SetName(name);
         IsDefault = isDefault;
         IsStatic = isStatic;
         IsPublic = isPublic;
-    }
-
-    internal void SetTenant(Guid tenantId, string tenantDomain)
-    {
-        TenantId = tenantId;
-        TenantDomain = LocalizedModelValidator.NotNullOrWhiteSpace(tenantDomain, $"{nameof(TenantDomain)}", AppRoleConsts.TenantDomainMaxLength);
     }
 
     internal void SetName(string name)

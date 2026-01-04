@@ -51,7 +51,7 @@ public static class Program
                 var env = context.HostingEnvironment;
                 if (!env.IsDevelopment()) return;
 
-                options.ListenAnyIP(7410);
+                options.ListenAnyIP(6410);
             })
             .ConfigureAppConfiguration(x => x.AddConfiguration(GetConfiguration()))
             .UseStartup<Startup>()

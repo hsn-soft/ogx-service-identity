@@ -10,7 +10,7 @@ public static class AppRoleConsts
     }
 
     public const string TableName = "AppRoles";
-    public const int TenantDomainMaxLength = 20;
+
     public const int NameMaxLength = 256;
     public const int NormalizedNameMaxLength = 256;
 }

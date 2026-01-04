@@ -9,21 +9,18 @@ public interface IAppUserRepository
 {
     Task<PagedQueryResult<AppUser>> GetPageListAsync(
         PagedQueryOptions<AppUser> options,
-        Guid? tenantId = null,
         List<Guid> roleIds = null,
         CancellationToken cancellationToken = default
     );
 
     Task<List<AppUser>> GetListAsync(
         ListQueryOptions<AppUser> options,
-        Guid? tenantId = null,
         CancellationToken cancellationToken = default
     );
 
 
 
     Task<List<AppUser>> GetSearchListAsync(
-        Guid? tenantId,
         [CanBeNull] string searchText = null,
         [CanBeNull] string sorting = null,
         int maxResultCount = int.MaxValue,
@@ -39,7 +36,7 @@ public interface IAppUserRepository
     [ItemCanBeNull]
     Task<AppUser> FindAsync(Expression<Func<AppUser, bool>> predicate);
 
-    Task<AppUser> CreateAsync(Guid tenantId, [NotNull] string tenantDomain,
+    Task<AppUser> CreateAsync(
         [NotNull] string userName,
         [NotNull] string email,
         string phone,
@@ -47,11 +44,12 @@ public interface IAppUserRepository
         string surname,
         string defaultLanguage,
         string avatarSuffixUrl,
+        bool isSystemUser = false,
         ICollection<string> roles = null,
         string plainPassword = null
     );
 
-    Task<AppUser> CreateAsync(Guid id, Guid tenantId, [NotNull] string tenantDomain,
+    Task<AppUser> CreateAsync(Guid id,
         [NotNull] string userName,
         [NotNull] string email,
         string phone,
@@ -59,6 +57,7 @@ public interface IAppUserRepository
         string surname,
         string defaultLanguage,
         string avatarSuffixUrl,
+        bool isSystemUser = false,
         ICollection<string> roles = null,
         string plainPassword = null
     );

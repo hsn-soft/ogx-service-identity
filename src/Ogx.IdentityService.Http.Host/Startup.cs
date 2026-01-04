@@ -36,7 +36,6 @@ public sealed class Startup
             .AddJwtServerAuthentication(Configuration, WebHostEnvironment, "audience-service-identity")
             .AddCustomAuthorization(IdentityServicePermissions.GetAll())
             .AddEventBus(Configuration, typeof(EventHandlersAssemblyMarker).Assembly)
-            .AddMicroserviceUserTenantChecker()
             .AddHostingHealthChecks(Configuration, "identity", checkRedis: true, checkBroker: true,
                 checkPostgresql: true, postgresqlConnectionName: EfCoreDbProperties.ConnectionStringName)
             .AddServiceApplicationConfiguration(Configuration)
@@ -95,7 +94,6 @@ public sealed class Startup
 
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseUserTenantChecker();
 
         app.UseEndpoints(endpoints =>
         {

@@ -26,7 +26,7 @@ services:
       timeout: 5s # application healthcheck response timeout.
       retries: 3 # If the application does not respond after 3 attempts, it will be marked as "unhealthy".
     ports:
-      - "7410:8080"
+      - "6410:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=stage
       - BUILD_NUMBER=${BUILD_ID}

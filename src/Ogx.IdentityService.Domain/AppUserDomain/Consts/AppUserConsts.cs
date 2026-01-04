@@ -16,7 +16,6 @@ public static class AppUserConsts
     public const int NormalizedEmailMaxLength = 256;
     public const int PhoneNumberMaxLength = 256;
 
-    public const int TenantDomainMaxLength = 20;
     public const int NameMaxLength = 128;
     public const int SurnameMaxLength = 128;
     public const int DefaultLanguageMaxLength = 5;

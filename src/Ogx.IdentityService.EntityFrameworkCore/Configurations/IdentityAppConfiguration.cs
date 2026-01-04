@@ -34,9 +34,6 @@ internal static class IdentityAppConfiguration
             b.Property(u => u.PhoneNumber).HasMaxLength(AppUserConsts.PhoneNumberMaxLength);
             b.Property(u => u.DefaultLanguage).HasMaxLength(AppUserConsts.DefaultLanguageMaxLength);
             b.Property(u => u.AvatarSuffixUrl).HasMaxLength(AppUserConsts.AvatarSuffixUrlMaxLength);
-            b.Property(x => x.TenantDomain).HasMaxLength(AppUserConsts.TenantDomainMaxLength);
-
-            b.HasIndex(u => u.TenantId).HasDatabaseName("UserTenantIndex");
 
             // The relationships between User and other entity types
             // Note that these relationships are configured with no navigation properties
@@ -104,9 +101,6 @@ internal static class IdentityAppConfiguration
             // Limit the size of columns to use efficient database types
             b.Property(u => u.Name).HasMaxLength(AppRoleConsts.NameMaxLength);
             b.Property(u => u.NormalizedName).HasMaxLength(AppRoleConsts.NormalizedNameMaxLength);
-            b.Property(x => x.TenantDomain).HasMaxLength(AppRoleConsts.TenantDomainMaxLength);
-
-            b.HasIndex(r => r.TenantId).HasDatabaseName("RoleTenantIndex");
 
             // The relationships between Role and other entity types
             // Note that these relationships are configured with no navigation properties

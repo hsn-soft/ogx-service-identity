@@ -99,9 +99,7 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                             name: seedRole.Name,
                             isDefault: seedRole.IsDefault,
                             isStatic: seedRole.IsStatic,
-                            isPublic: seedRole.IsPublic,
-                            tenantId: seedRole.TenantId,
-                            tenantDomain: seedRole.TenantDomain
+                            isPublic: seedRole.IsPublic
                         );
 
                         var result = await roleManager.CreateAsync(draftAppRole);
@@ -121,8 +119,7 @@ public sealed class EfCoreSeederService : IBasicDataSeeder
                     foreach (var seedUser in SeedUsers.Users)
                     {
                         var draftAppUser = new AppUser(
-                            tenantId: seedUser.TenantId,
-                            tenantDomain: seedUser.TenantDomain,
+                            isSystemUser:true,
                             id: seedUser.UserId,
                             userName: seedUser.Username,
                             email: seedUser.Email,

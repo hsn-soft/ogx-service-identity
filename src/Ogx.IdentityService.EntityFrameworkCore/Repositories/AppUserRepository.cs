@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using HsnSoft.Base;
 using HsnSoft.Base.Data;
 using HsnSoft.Base.Domain.Models;
-using HsnSoft.Base.MultiTenancy;
 using HsnSoft.Base.Validation.Localization;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
@@ -26,7 +25,6 @@ public class AppUserRepository(
     IdentityAppDbContext context,
     IStringLocalizerFactory stringLocalizerFactory,
     IDataFilter dataFilter,
-    ICurrentTenant currentTenant,
     UserManager<AppUser> userManager)
     : IAppUserRepository
 {
@@ -35,12 +33,6 @@ public class AppUserRepository(
     [NotNull] protected IStringLocalizer L { get; } = stringLocalizerFactory.CreateMultiple([typeof(IdentityServiceResource), typeof(ValidationResource), typeof(SharedResource)]);
 
     [CanBeNull] private IDataFilter DataFilter { get; } = dataFilter;
-
-    [CanBeNull] private ICurrentTenant CurrentTenant { get; } = currentTenant;
-
-    private Guid? CurrentTenantId => CurrentTenant?.Id;
-
-    private bool IsMultiTenantFilterEnabled => CurrentTenantId != null && (DataFilter?.IsEnabled<IMultiTenant>() ?? false);
 
     private bool IsSoftDeleteFilterEnabled => DataFilter?.IsEnabled<ISoftDelete>() ?? false;
 
@@ -60,19 +52,10 @@ public class AppUserRepository(
 
     public async Task<PagedQueryResult<AppUser>> GetPageListAsync(
         PagedQueryOptions<AppUser> options,
-        Guid? tenantId = null,
         List<Guid> roleIds = null,
         CancellationToken cancellationToken = default)
     {
         var query = GetQueryableUser(roleIds);
-        if (IsMultiTenantFilterEnabled)
-        {
-            query = query.Where(e => e.TenantId == CurrentTenantId);
-        }
-        else if (tenantId.HasValue)
-        {
-            query = query.Where(e => e.TenantId == tenantId.Value);
-        }
 
         if (IsSoftDeleteFilterEnabled)
         {
@@ -105,19 +88,11 @@ public class AppUserRepository(
 
     public async Task<List<AppUser>> GetListAsync(
         ListQueryOptions<AppUser> options,
-        Guid? tenantId = null,
+
         CancellationToken cancellationToken = default
     )
     {
         var query = GetQueryableUser();
-        if (IsMultiTenantFilterEnabled)
-        {
-            query = query.Where(e => e.TenantId == CurrentTenantId);
-        }
-        else if (tenantId.HasValue)
-        {
-            query = query.Where(e => e.TenantId == tenantId.Value);
-        }
 
         if (IsSoftDeleteFilterEnabled)
         {
@@ -136,14 +111,14 @@ public class AppUserRepository(
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<List<AppUser>> GetSearchListAsync(Guid? tenantId,
+    public async Task<List<AppUser>> GetSearchListAsync(
         string searchText = null,
         string sorting = null,
         int maxResultCount = int.MaxValue,
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(context.Users.AsQueryable(), tenantId, searchText);
+        var query = ApplyFilter(context.Users.AsQueryable(), searchText);
 
         return await query
             .OrderBy(string.IsNullOrWhiteSpace(sorting) ? AppUserConsts.GetDefaultSorting(false) : sorting)
@@ -170,11 +145,10 @@ public class AppUserRepository(
     public async Task<AppUser> FindAsync(Expression<Func<AppUser, bool>> predicate)
         => await context.Users
             .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
-            .WhereIf(IsMultiTenantFilterEnabled, e => e.TenantId == CurrentTenantId)
             .FirstOrDefaultAsync(predicate);
 
 
-    public async Task<AppUser> CreateAsync(Guid tenantId, string tenantDomain,
+    public async Task<AppUser> CreateAsync(
         string userName,
         string email,
         string phone,
@@ -182,10 +156,11 @@ public class AppUserRepository(
         string surname,
         string defaultLanguage,
         string avatarSuffixUrl,
+        bool isSystemUser = false,
         ICollection<string> roles = null,
         string plainPassword = null
     )
-        => await CreateAsync(Guid.NewGuid(), tenantId, tenantDomain,
+        => await CreateAsync(Guid.NewGuid(),
             userName,
             email,
             phone,
@@ -193,11 +168,12 @@ public class AppUserRepository(
             surname,
             defaultLanguage,
             avatarSuffixUrl,
+            isSystemUser,
             roles,
             plainPassword
         );
 
-    public async Task<AppUser> CreateAsync(Guid id, Guid tenantId, string tenantDomain,
+    public async Task<AppUser> CreateAsync(Guid id,
         string userName,
         string email,
         string phone,
@@ -205,6 +181,7 @@ public class AppUserRepository(
         string surname,
         string defaultLanguage,
         string avatarSuffixUrl,
+        bool isSystemUser = false,
         ICollection<string> roles = null,
         string plainPassword = null
     )
@@ -215,15 +192,10 @@ public class AppUserRepository(
         email = StringOperations.SplitFirstValue(email, "#");
         string checkedUserName = StringOperations.ReplaceInvalidChars(userName, false, "-").ToLower(new CultureInfo("en-US"));
         string checkedEmail = StringOperations.ReplaceInvalidChars(email, true, "-").ToLower(new CultureInfo("en-US"));
-        string userTenantDomain = StringOperations.ReplaceInvalidChars(tenantDomain, false, "-").ToLower(new CultureInfo("en-US"));
-
-        checkedUserName = $"{checkedUserName}#{userTenantDomain}";
-        checkedEmail = $"{checkedEmail}#{userTenantDomain}";
 
         // Create draft AppUser
         var draftAppUser = new AppUser(
-            tenantId: tenantId,
-            tenantDomain: userTenantDomain,
+         isSystemUser:isSystemUser,
             id: id,
             userName: checkedUserName,
             email: checkedEmail,
@@ -245,7 +217,7 @@ public class AppUserRepository(
             {
                 string split = StringOperations.SplitFirstValue(role, "#");
                 string checkedRoleName = StringOperations.ReplaceInvalidChars(split, false, "-").ToLower(new CultureInfo("en-US"));
-                checkedRoleList.Add($"{checkedRoleName}#{userTenantDomain}");
+                checkedRoleList.Add($"{checkedRoleName}");
             }
 
             roles = checkedRoleList;
@@ -288,10 +260,6 @@ public class AppUserRepository(
 
         string checkedUserName = StringOperations.ReplaceInvalidChars(userName, false, "-").ToLower(new CultureInfo("en-US"));
         string checkedEmail = StringOperations.ReplaceInvalidChars(email, true, "-").ToLower(new CultureInfo("en-US"));
-        string userTenantDomain = StringOperations.ReplaceInvalidChars(oldAppUser.TenantDomain, false, "-").ToLower(new CultureInfo("en-US"));
-
-        checkedUserName = $"{checkedUserName}#{userTenantDomain}";
-        checkedEmail = $"{checkedEmail}#{userTenantDomain}";
 
         oldAppUser.SetUserName(checkedUserName);
         oldAppUser.SetEmail(checkedEmail);
@@ -311,7 +279,7 @@ public class AppUserRepository(
             {
                 string split = StringOperations.SplitFirstValue(role, "#");
                 string checkedRoleName = StringOperations.ReplaceInvalidChars(split, false, "-").ToLower(new CultureInfo("en-US"));
-                checkedRoleList.Add($"{checkedRoleName}#{userTenantDomain}");
+                checkedRoleList.Add($"{checkedRoleName}");
             }
 
             roles = checkedRoleList;
@@ -368,7 +336,6 @@ public class AppUserRepository(
 
     private IQueryable<AppUser> ApplyFilter(
         IQueryable<AppUser> query,
-        Guid? tenantId,
         [CanBeNull] string searchText = null,
         [CanBeNull] string username = null,
         [CanBeNull] string email = null,
@@ -384,15 +351,6 @@ public class AppUserRepository(
         phoneNumber = phoneNumber?.ToLower(new CultureInfo("en-US"));
         name = name?.ToLower(new CultureInfo("en-US"));
         surname = surname?.ToLower(new CultureInfo("en-US"));
-
-        if (IsMultiTenantFilterEnabled)
-        {
-            query = query.Where(e => e.TenantId == CurrentTenantId);
-        }
-        else if (tenantId.HasValue)
-        {
-            query = query.Where(e => e.TenantId == tenantId.Value);
-        }
 
         return query
             .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
@@ -427,7 +385,6 @@ public class AppUserRepository(
         {
             var result = await context.Roles
                 .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
-                .WhereIf(IsMultiTenantFilterEnabled, e => e.TenantId == CurrentTenantId)
                 .FirstOrDefaultAsync(x => x.Name == roleName);
 
             if (result == null)

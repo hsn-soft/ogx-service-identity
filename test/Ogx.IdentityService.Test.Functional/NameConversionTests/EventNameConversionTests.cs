@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Ogx.IdentityService.Test.Shared.Utils;
 using HsnSoft.Base.EventBus;
-using Ogx.IdentityService;
 
 namespace Ogx.IdentityService.Test.Functional.NameConversionTests;
 

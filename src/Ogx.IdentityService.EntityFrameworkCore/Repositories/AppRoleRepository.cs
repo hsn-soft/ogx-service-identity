@@ -12,7 +12,6 @@ using Ogx.Shared.Helper.Utils;
 using Ogx.Shared.Localization;
 using HsnSoft.Base;
 using HsnSoft.Base.Data;
-using HsnSoft.Base.MultiTenancy;
 using HsnSoft.Base.Validation.Localization;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
@@ -32,24 +31,15 @@ public class AppRoleRepository : IAppRoleRepository
     [CanBeNull]
     private IDataFilter DataFilter { get; }
 
-    [CanBeNull]
-    private ICurrentTenant CurrentTenant { get; }
-
-    private Guid? CurrentTenantId => CurrentTenant?.Id;
-
-    private bool IsMultiTenantFilterEnabled => CurrentTenantId != null && (DataFilter?.IsEnabled<IMultiTenant>() ?? false);
-
     private bool IsSoftDeleteFilterEnabled => DataFilter?.IsEnabled<ISoftDelete>() ?? false;
 
     public AppRoleRepository(IdentityAppDbContext context,
         IStringLocalizerFactory stringLocalizerFactory,
         IDataFilter dataFilter,
-        ICurrentTenant currentTenant,
         RoleManager<AppRole> roleManager)
     {
         _context = context;
         DataFilter = dataFilter;
-        CurrentTenant = currentTenant;
         _roleManager = roleManager;
 
         L = stringLocalizerFactory.CreateMultiple(new List<Type>
@@ -60,7 +50,7 @@ public class AppRoleRepository : IAppRoleRepository
         });
     }
 
-    public async Task<List<AppRole>> GetPagedListWithFiltersAsync(Guid? tenantId,
+    public async Task<List<AppRole>> GetPagedListWithFiltersAsync(
         string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -71,7 +61,7 @@ public class AppRoleRepository : IAppRoleRepository
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(_context.Roles.AsQueryable(), tenantId, null,
+        var query = ApplyFilter(_context.Roles.AsQueryable(), null,
             name, isDefault, isStatic, isPublic);
 
         // TODO: Convert new paging list
@@ -81,7 +71,7 @@ public class AppRoleRepository : IAppRoleRepository
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<long> GetCountWithFiltersAsync(Guid? tenantId,
+    public async Task<long> GetCountWithFiltersAsync(
         string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -89,13 +79,13 @@ public class AppRoleRepository : IAppRoleRepository
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(_context.Roles.AsQueryable(), tenantId, null,
+        var query = ApplyFilter(_context.Roles.AsQueryable(), null,
             name, isDefault, isStatic, isPublic);
 
         return await query.LongCountAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<List<AppRole>> GetFilterListAsync(Guid? tenantId,
+    public async Task<List<AppRole>> GetFilterListAsync(
         string name = null,
         bool? isDefault = null,
         bool? isStatic = null,
@@ -104,7 +94,7 @@ public class AppRoleRepository : IAppRoleRepository
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(_context.Roles.AsQueryable(), tenantId, null,
+        var query = ApplyFilter(_context.Roles.AsQueryable(),  null,
             name, isDefault, isStatic, isPublic);
 
         return await query
@@ -112,14 +102,14 @@ public class AppRoleRepository : IAppRoleRepository
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<List<AppRole>> GetSearchListAsync(Guid? tenantId,
+    public async Task<List<AppRole>> GetSearchListAsync(
         string searchText = null,
         string sorting = null,
         int maxResultCount = int.MaxValue,
         CancellationToken cancellationToken = default
     )
     {
-        var query = ApplyFilter(_context.Roles.AsQueryable(), tenantId, searchText);
+        var query = ApplyFilter(_context.Roles.AsQueryable(),  searchText);
 
         return await query
             .OrderBy(string.IsNullOrWhiteSpace(sorting) ? AppRoleConsts.GetDefaultSorting(false) : sorting)
@@ -133,21 +123,20 @@ public class AppRoleRepository : IAppRoleRepository
     public async Task<AppRole> FindAsync(Expression<Func<AppRole, bool>> predicate)
         => await _context.Roles
             .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)
-            .WhereIf(IsMultiTenantFilterEnabled, e => e.TenantId == CurrentTenantId)
             .FirstOrDefaultAsync(predicate);
 
-    public async Task<AppRole> CreateAsync(Guid tenantId, string tenantDomain,
+    public async Task<AppRole> CreateAsync(
         string name,
         bool isDefault,
         bool isStatic,
         bool isPublic)
-        => await CreateAsync(Guid.NewGuid(), tenantId, tenantDomain,
+        => await CreateAsync(Guid.NewGuid(),
             name,
             isDefault,
             isStatic,
             isPublic);
 
-    public async Task<AppRole> CreateAsync(Guid id, Guid tenantId, string tenantDomain,
+    public async Task<AppRole> CreateAsync(Guid id,
         string name,
         bool isDefault,
         bool isStatic,
@@ -157,10 +146,6 @@ public class AppRoleRepository : IAppRoleRepository
 
         name = StringOperations.SplitFirstValue(name, "#");
         string checkedRoleName = StringOperations.ReplaceInvalidChars(name, false, "-").ToLower(new CultureInfo("en-US"));
-        string roleDisplayName = checkedRoleName;
-        string roleTenantDomain = StringOperations.ReplaceInvalidChars(tenantDomain, false, "-").ToLower(new CultureInfo("en-US"));
-
-        checkedRoleName = $"{checkedRoleName}#{roleTenantDomain}";
 
         // Create draft AppRole
         var draftAppRole = new AppRole(
@@ -168,9 +153,7 @@ public class AppRoleRepository : IAppRoleRepository
             name: checkedRoleName,
             isDefault: isDefault,
             isStatic: isStatic,
-            isPublic: isPublic,
-            tenantId: tenantId,
-            tenantDomain: roleTenantDomain
+            isPublic: isPublic
         );
 
         //Domain Rule -> AppRole must be unique
@@ -181,7 +164,7 @@ public class AppRoleRepository : IAppRoleRepository
 
         // add role claims
         await AddClaimAsync(draftAppRole, new Claim("role_name",
-            StringOperations.FirstCharCapitalize(roleDisplayName, new[] { "-", "_" })));
+            StringOperations.FirstCharCapitalize(checkedRoleName, new[] { "-", "_" })));
 
         return draftAppRole;
     }
@@ -200,10 +183,6 @@ public class AppRoleRepository : IAppRoleRepository
 
         name = StringOperations.SplitFirstValue(name, "#");
         string checkedRoleName = StringOperations.ReplaceInvalidChars(name, false, "-").ToLower(new CultureInfo("en-US"));
-        string roleDisplayName = checkedRoleName;
-        string roleTenantDomain = StringOperations.ReplaceInvalidChars(oldAppRole.TenantDomain, false, "-").ToLower(new CultureInfo("en-US"));
-
-        checkedRoleName = $"{checkedRoleName}#{roleTenantDomain}";
 
         oldAppRole.SetName(checkedRoleName);
         oldAppRole.IsDefault = isDefault;
@@ -225,7 +204,7 @@ public class AppRoleRepository : IAppRoleRepository
 
         // add role claims
         await AddClaimAsync(oldAppRole, new Claim("role_name",
-            StringOperations.FirstCharCapitalize(roleDisplayName, new[] { "-", "_" })));
+            StringOperations.FirstCharCapitalize(checkedRoleName, new[] { "-", "_" })));
 
         return oldAppRole;
     }
@@ -253,7 +232,6 @@ public class AppRoleRepository : IAppRoleRepository
 
     private IQueryable<AppRole> ApplyFilter(
         IQueryable<AppRole> query,
-        Guid? tenantId,
         [CanBeNull] string searchText = null,
         [CanBeNull] string name = null,
         bool? isDefault = null,
@@ -262,15 +240,6 @@ public class AppRoleRepository : IAppRoleRepository
     {
         searchText = searchText?.ToLower(new CultureInfo("en-US"));
         name = name?.ToLower(new CultureInfo("en-US"));
-
-        if (IsMultiTenantFilterEnabled)
-        {
-            query = query.Where(e => e.TenantId == CurrentTenantId);
-        }
-        else if (tenantId.HasValue)
-        {
-            query = query.Where(e => e.TenantId == tenantId.Value);
-        }
 
         return query
             .WhereIf(IsSoftDeleteFilterEnabled, e => e.IsDeleted == false)

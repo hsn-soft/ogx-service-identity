@@ -12,7 +12,7 @@ using Ogx.IdentityService.EntityFrameworkCore.Context;
 namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
 {
     [DbContext(typeof(IdentityAppDbContext))]
-    [Migration("20260103235119_InitialCreate")]
+    [Migration("20260104224307_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -55,21 +55,11 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<string>("TenantDomain")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("RoleTenantIndex");
 
                     b.ToTable("AppRoles", (string)null);
                 });
@@ -129,6 +119,9 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsSystemUser")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -164,13 +157,6 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<string>("TenantDomain")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
@@ -186,9 +172,6 @@ namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("UserTenantIndex");
 
                     b.ToTable("AppUsers", (string)null);
                 });

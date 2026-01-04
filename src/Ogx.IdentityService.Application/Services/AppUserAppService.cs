@@ -83,7 +83,6 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
 
         var result = await _appUserRepository.GetPageListAsync(
             // extra filters
-            tenantId: pagedInput.TenantId,
             roleIds: pagedInput.Roles is { Count: > 0 } ? pagedInput.Roles.Select(x => x.RoleId).ToList() : null,
 
             // standard filter
@@ -149,7 +148,6 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
 
         var result = await _appUserRepository.GetListAsync(
             // extra filters
-            tenantId: filterInput.TenantId,
 
             // standart filter
             options: new ListQueryOptions<AppUser>
@@ -182,7 +180,7 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
             throw new BaseHttpException((int)HttpStatusCode.BadRequest);
         }
 
-        var items = await _appUserRepository.GetSearchListAsync(searchInput.TenantId,
+        var items = await _appUserRepository.GetSearchListAsync(
             searchInput.SearchText, searchInput.SortingText, searchInput.MaxResultCount);
 
         if (items == null)
@@ -211,8 +209,7 @@ public sealed class AppUserAppService : ApplicationServiceBase, IAppUserAppServi
         }
 
         var appUser = await _appUserRepository.CreateAsync(
-            tenantId: input.TenantId ?? Guid.Empty,
-            tenantDomain: input.TenantDomain,
+            isSystemUser:input.IsSystemUser,
             userName: input.UserName,
             email: input.Email,
             phone: input.PhoneNumber,
