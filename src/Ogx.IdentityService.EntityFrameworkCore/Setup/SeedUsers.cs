@@ -13,9 +13,9 @@ internal static class SeedUsers
             UserId = Guid.Parse("4A670F80-5592-44D3-AFD5-C8DFCA3679E4"),
             Username = DefaultRoleNames.SystemAdmin,
             PlainPassword = DefaultPlainPassword,
-            GivenName = DefaultDomainNames.System,
-            FamilyName = IdentityConsts.Admin,
-            Email = $"{IdentityConsts.Admin}@{IdentityConsts.SolutionName}.com",
+            GivenName = DefaultRoleNames.SystemAdmin,
+            FamilyName = DefaultRoleNames.SystemAdmin,
+            Email = $"{DefaultRoleNames.SystemAdmin}@{IdentityConsts.SolutionName}.com",
             Roles = { DefaultRoleNames.SystemAdmin },
             AvatarUrl = "/demo-hsnsoft-48x48.png"
         },
@@ -24,9 +24,9 @@ internal static class SeedUsers
             UserId = Guid.Parse("BA271C49-4FCD-4143-8A17-5B6B7452AF66"),
             Username = DefaultRoleNames.SystemUser,
             PlainPassword = DefaultPlainPassword,
-            GivenName = DefaultDomainNames.System,
-            FamilyName = IdentityConsts.User,
-            Email = $"{IdentityConsts.User}@{IdentityConsts.SolutionName}.com",
+            GivenName = DefaultRoleNames.SystemUser,
+            FamilyName = DefaultRoleNames.SystemUser,
+            Email = $"{DefaultRoleNames.SystemUser}@{IdentityConsts.SolutionName}.com",
             Roles = { DefaultRoleNames.SystemUser },
             AvatarUrl = "/demo-hsnsoft-48x48.png"
         },
@@ -39,7 +39,7 @@ internal static class SeedUsers
             FamilyName = "SAHIN",
             Email = "hsnsh@outlook.com",
             Phone = "905335551122",
-            Roles = { DefaultRoleNames.AppUser },
+            Roles = { DefaultRoleNames.Registered },
             AvatarUrl = "/demo-hsnsoft-48x48.png"
         },
     };

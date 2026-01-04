@@ -2,7 +2,7 @@
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
         <Version>2026.1</Version>
-        <OgxSharedVersion>2026.1.1</OgxSharedVersion>
+        <OgxSharedVersion>2026.1.2</OgxSharedVersion>
         <HsnSoftFrameworkVersion>2025.10.1</HsnSoftFrameworkVersion>
         <MicrosoftAspNetCorePackageVersion>10.0.1</MicrosoftAspNetCorePackageVersion>
         <MicrosoftEntityFrameworkCorePackageVersion>10.0.1</MicrosoftEntityFrameworkCorePackageVersion>

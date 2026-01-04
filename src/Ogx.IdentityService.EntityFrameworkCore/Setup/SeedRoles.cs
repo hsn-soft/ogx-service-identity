@@ -19,7 +19,7 @@ internal static class SeedRoles
         new SeedRole
         {
             RoleId = Guid.Parse("ABCDEF6D-370F-4FDC-9BCA-0330FF0DFABC"),
-            Name = DefaultRoleNames.AppUser,
+            Name = DefaultRoleNames.Registered,
             IsPublic = false,
             IsDefault = true,
         },
