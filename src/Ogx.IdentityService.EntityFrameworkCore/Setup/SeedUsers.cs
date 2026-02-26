@@ -34,7 +34,7 @@ internal static class SeedUsers
         },
         new SeedUser
         {
-            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            UserId = Guid.Parse("ABCD12B1-09B6-4DA9-AB62-D5F1DDD5FABC"),
             IsSystemUser = false,
             Username = "hsnsh",
             PlainPassword = DefaultPlainPassword,
@@ -47,7 +47,7 @@ internal static class SeedUsers
         },
         new SeedUser
         {
-            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            UserId = Guid.Parse("ABCD12B2-09B6-4DA9-AB62-D5F1DDD5FABC"),
             IsSystemUser = false,
             Username = "bahar",
             PlainPassword = DefaultPlainPassword,
@@ -60,7 +60,7 @@ internal static class SeedUsers
         },
         new SeedUser
         {
-            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            UserId = Guid.Parse("ABCD12B3-09B6-4DA9-AB62-D5F1DDD5FABC"),
             IsSystemUser = false,
             Username = "rabia",
             PlainPassword = DefaultPlainPassword,
@@ -73,7 +73,7 @@ internal static class SeedUsers
         },
         new SeedUser
         {
-            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            UserId = Guid.Parse("ABCD12B4-09B6-4DA9-AB62-D5F1DDD5FABC"),
             IsSystemUser = false,
             Username = "ertugrul",
             PlainPassword = DefaultPlainPassword,
