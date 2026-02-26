@@ -12,7 +12,7 @@ using Ogx.IdentityService.EntityFrameworkCore.Context;
 namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.App
 {
     [DbContext(typeof(IdentityAppDbContext))]
-    [Migration("20260104224307_InitialCreate")]
+    [Migration("20260226195317_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

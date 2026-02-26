@@ -45,6 +45,45 @@ internal static class SeedUsers
             Roles = { DefaultRoleNames.Registered },
             AvatarUrl = "/demo-hsnsoft-48x48.png"
         },
+        new SeedUser
+        {
+            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            IsSystemUser = false,
+            Username = "bahar",
+            PlainPassword = DefaultPlainPassword,
+            GivenName = "Bahar",
+            FamilyName = "SAHIN",
+            Email = "bahar@outlook.com",
+            Phone = "905335551122",
+            Roles = { DefaultRoleNames.Registered },
+            AvatarUrl = "/demo-hsnsoft-48x48.png"
+        },
+        new SeedUser
+        {
+            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            IsSystemUser = false,
+            Username = "rabia",
+            PlainPassword = DefaultPlainPassword,
+            GivenName = "Rabia",
+            FamilyName = "SAHIN",
+            Email = "rabia@outlook.com",
+            Phone = "905335551122",
+            Roles = { DefaultRoleNames.Registered },
+            AvatarUrl = "/demo-hsnsoft-48x48.png"
+        },
+        new SeedUser
+        {
+            UserId = Guid.Parse("ABCD12BF-09B6-4DA9-AB62-D5F1DDD5FABC"),
+            IsSystemUser = false,
+            Username = "ertugrul",
+            PlainPassword = DefaultPlainPassword,
+            GivenName = "Ertuğrul",
+            FamilyName = "SAHIN",
+            Email = "ertugrul@outlook.com",
+            Phone = "905335551122",
+            Roles = { DefaultRoleNames.Registered },
+            AvatarUrl = "/demo-hsnsoft-48x48.png"
+        },
     };
 }
 

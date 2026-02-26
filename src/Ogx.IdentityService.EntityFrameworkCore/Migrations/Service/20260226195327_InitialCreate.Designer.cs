@@ -11,7 +11,7 @@ using Ogx.IdentityService.EntityFrameworkCore.Context;
 namespace Ogx.IdentityService.EntityFrameworkCore.Migrations.Service
 {
     [DbContext(typeof(IdentityServiceDbContext))]
-    [Migration("20260104224324_InitialCreate")]
+    [Migration("20260226195327_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
